@@ -7,6 +7,7 @@ var gulp = require("gulp"),
     gulpif = require("gulp-if"),
     uglify = require("gulp-uglify"),
     minifyCSS = require('gulp-minify-css'),
+    minifyHTML = require('gulp-minify-html'),
     concat = require("gulp-concat");
 
 var env,
@@ -58,12 +59,15 @@ gulp.task("js", function() {
 gulp.task("compass", function() {
     gulp.src(sassSrc)
         .pipe(compass({
-            // config_file: "./config.rb",
-            css: outputDir + 'css', // this thing removes a duplicated output folder 'css' in the root folder.
+            css: outputDir + 'css',
+            // this thing removes a duplicated output folder 'css' in the root folder.
             sass: 'components/sass', // sass directory
             image: outputDir + 'images' // image directory
             // style: sassStyle
-            // :compressed moved to config.rb, well, after experimenting, you can minify it using gulp-minify-css to achieve the same result. Great.
+            // :compressed can be moved to config.rb, 
+            // well, after experimenting, you can minify 
+            // it using gulp-minify-css to achieve the
+            // same result. Great.
         }))
         .on('error', gutil.log)
         .pipe(minifyCSS()) // see what it does, it does what you are expecting.
@@ -83,12 +87,15 @@ gulp.task("watch", function() {
     gulp.watch(coffeeSrc, ['coffee']);
     gulp.watch(jsSrc, ['js']);
     gulp.watch("components/sass/*.scss", ['compass']);
-    gulp.watch(htmlSrc, ['html']);
+    // gulp.watch(htmlSrc, ['html']);
+    gulp.watch("builds/development/*.html", ['html']);
     gulp.watch(jsonSrc, ['json']);
 });
 
 gulp.task("html", function() {
-    gulp.src(htmlSrc)
+    gulp.src("builds/development/*.html")
+        .pipe(gulpif(env === 'production', minifyHTML()))
+        .pipe(gulpif(env === 'production', gulp.dest(outputDir)))
         .pipe(connect.reload())
 });
 
