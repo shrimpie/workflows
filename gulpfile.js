@@ -4,23 +4,38 @@ var gulp = require("gulp"),
     browserify = require("gulp-browserify"),
     compass = require("gulp-compass"),
     connect = require("gulp-connect"),
+    minifyCSS = require('gulp-minify-css');
     concat = require("gulp-concat");
 
-// // test gulp
-// gulp.task("log", function() {
-//     gutil.log("Workflows are awesome");
-// });
+var env,
+    coffeeSrc,
+    jsSrc,
+    sassSrc,
+    htmlSrc,
+    jsonSrc,
+    outputDir,
+    sassStyle;
 
-var coffeeSrc = ['components/coffee/tagline.coffee'];
-var jsSrc = [
+env = process.env.NODE_ENV || 'development';
+
+if(env === 'development') {
+    outputDir = 'builds/development/';
+    sassStyle = 'expanded';
+} else {
+    outputDir = 'builds/production/';
+    sassStyle = 'compressed';
+}
+
+coffeeSrc = ['components/coffee/tagline.coffee'];
+jsSrc = [
     'components/scripts/rclick.js',
     'components/scripts/pixgrid.js',
     'components/scripts/tagline.js',
     'components/scripts/template.js',
 ];
-var sassSrc = ['components/sass/style.scss'];
-var htmlSrc = ['builds/development/*.html'];
-var jsonSrc = ['builds/development/js/*.json'];
+sassSrc = ['components/sass/style.scss'];
+htmlSrc = [outputDir + '*.html'];
+jsonSrc = [outputDir + '/js/*.json'];
 
 gulp.task('coffee', function() {
     gulp.src(coffeeSrc)
@@ -33,25 +48,29 @@ gulp.task("js", function() {
     gulp.src(jsSrc)
         .pipe(concat('script.js'))
         .pipe(browserify())
-        .pipe(gulp.dest("builds/development/js"))
+        .pipe(gulp.dest(outputDir + "js"))
         .pipe(connect.reload())
 });
 
 gulp.task("compass", function() {
     gulp.src(sassSrc)
         .pipe(compass({
-            sass: 'components/sass',
-            image: 'builds/development/images',
-            style: 'expanded'
+            // config_file: "./config.rb",
+            css: outputDir + 'css', // this thing removes a duplicated output folder 'css' in the root folder.
+            sass: 'components/sass', // sass directory
+            image: outputDir + 'images' // image directory
+            // style: sassStyle
+            // :compressed moved to config.rb, well, after experimenting, you can minify it using gulp-minify-css to achieve the same result. Great.
         }))
         .on('error', gutil.log)
-        .pipe(gulp.dest("builds/development/css"))
+        .pipe(minifyCSS()) // see what it does, it does what you are expecting.
+        .pipe(gulp.dest(outputDir + "css"))
         .pipe(connect.reload())
 });
 
 gulp.task("connect", function() {
     connect.server({
-        root: "builds/development/",
+        root: outputDir,
         livereload: true
     });
 });
