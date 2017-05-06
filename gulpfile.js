@@ -4,7 +4,9 @@ var gulp = require("gulp"),
     browserify = require("gulp-browserify"),
     compass = require("gulp-compass"),
     connect = require("gulp-connect"),
-    minifyCSS = require('gulp-minify-css');
+    gulpif = require("gulp-if"),
+    uglify = require("gulp-uglify"),
+    minifyCSS = require('gulp-minify-css'),
     concat = require("gulp-concat");
 
 var env,
@@ -48,6 +50,7 @@ gulp.task("js", function() {
     gulp.src(jsSrc)
         .pipe(concat('script.js'))
         .pipe(browserify())
+        .pipe(gulpif(env === "production", uglify()))
         .pipe(gulp.dest(outputDir + "js"))
         .pipe(connect.reload())
 });
